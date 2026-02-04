@@ -19,6 +19,7 @@ struct SettingsView: View {
                             Text(mode.rawValue).tag(mode)
                         }
                     }
+                    .id(settingsStore.accentColor)
                 }
 
                 Section("Accent Color") {
@@ -45,6 +46,7 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Settings")
+            .tint(settingsStore.accentColor.color)
         }
     }
 }
