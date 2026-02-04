@@ -7,26 +7,45 @@ import SwiftUI
 
 struct ContentView: View {
     @Environment(SettingsStore.self) private var settingsStore
+    @State private var selectedTab: TabDestination = .convert
+    @State private var showingAddSheet = false
 
     var body: some View {
-        TabView {
-            ConvertView()
-                .tabItem {
-                    Label("Convert", systemImage: "arrow.left.arrow.right")
-                }
+        TabView(selection: $selectedTab) {
+            Tab("Convert", systemImage: "arrow.left.arrow.right", value: .convert) {
+                ConvertView()
+            }
 
-            EditView()
-                .tabItem {
-                    Label("Edit", systemImage: "pencil")
-                }
+            Tab("Edit", systemImage: "pencil", value: .edit) {
+                EditView()
+            }
 
-            SettingsView()
-                .tabItem {
-                    Label("Settings", systemImage: "gear")
-                }
+            Tab("Settings", systemImage: "gear", value: .settings) {
+                SettingsView()
+            }
+
+            Tab(value: TabDestination.add, role: .search) {
+                Color.clear
+            }
         }
         .tint(settingsStore.accentColor.color)
+        .onChange(of: selectedTab) { oldValue, newValue in
+            if newValue == .add {
+                showingAddSheet = true
+                selectedTab = oldValue
+            }
+        }
+        .sheet(isPresented: $showingAddSheet) {
+            AddCurrencyView()
+        }
     }
+}
+
+enum TabDestination: Hashable {
+    case convert
+    case edit
+    case settings
+    case add
 }
 
 #Preview {

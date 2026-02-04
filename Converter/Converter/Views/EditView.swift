@@ -7,7 +7,6 @@ import SwiftUI
 
 struct EditView: View {
     @Environment(CurrencyStore.self) private var currencyStore
-    @State private var showingAddSheet = false
 
     var body: some View {
         NavigationStack {
@@ -17,18 +16,6 @@ struct EditView: View {
                 }
             }
             .navigationTitle("Edit")
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        showingAddSheet = true
-                    } label: {
-                        Image(systemName: "plus")
-                    }
-                }
-            }
-            .sheet(isPresented: $showingAddSheet) {
-                AddCurrencyView()
-            }
             .refreshable {
                 await currencyStore.refresh()
             }
