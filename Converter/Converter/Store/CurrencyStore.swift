@@ -29,7 +29,15 @@ class CurrencyStore {
             Currency(code: "EUR", name: "Euro", rateToUSD: 0.85),
             Currency(code: "RUB", name: "Russian Ruble", rateToUSD: 76.24),
             Currency(code: "BTC", name: "Bitcoin", rateToUSD: 0.000014, isCrypto: true),
-            Currency(code: "ETH", name: "Ethereum", rateToUSD: 0.000466, isCrypto: true)
+            Currency(code: "ETH", name: "Ethereum", rateToUSD: 0.000466, isCrypto: true),
+            Currency(code: "VND", name: "Vietnamese Dong", rateToUSD: 25984.15),
+            Currency(code: "CNY", name: "Chinese Yuan", rateToUSD: 6.94),
+            Currency(code: "GBP", name: "British Pound", rateToUSD: 0.73),
+            Currency(code: "TON", name: "Toncoin", rateToUSD: 0.72, isCrypto: true),
+            Currency(code: "UAH", name: "Ukrainian Hryvnia", rateToUSD: 43.12),
+            Currency(code: "KRW", name: "South Korean Won", rateToUSD: 1461.26),
+            Currency(code: "JPY", name: "Japanese Yen", rateToUSD: 156.86),
+            Currency(code: "CAD", name: "Canadian Dollar", rateToUSD: 1.37)
         ]
 
         // Set USD as active currency with initial value of 100
