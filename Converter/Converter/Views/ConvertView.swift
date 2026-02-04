@@ -53,8 +53,10 @@ struct CurrencyRow: View {
 
             Text(currency.formatValue(value))
                 .font(.body.monospacedDigit())
-                .foregroundStyle(isActive ? accentColor : .primary)
-                .fontWeight(isActive ? .semibold : .regular)
+                .foregroundStyle(isActive ? .white : .primary)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 4)
+                .background(isActive ? accentColor : .clear, in: .capsule)
         }
     }
 }
