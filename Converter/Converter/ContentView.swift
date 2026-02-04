@@ -16,7 +16,7 @@ struct ContentView: View {
                 ConvertView()
             }
 
-            Tab("Edit", systemImage: "pencil", value: .edit) {
+            Tab("Edit", systemImage: "list.bullet", value: .edit) {
                 EditView()
             }
 
