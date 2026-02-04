@@ -24,23 +24,8 @@ struct ContentView: View {
                 .tabItem {
                     Label("Settings", systemImage: "gear")
                 }
-
-            AddPlaceholderView()
-                .tabItem {
-                    Label("Add", systemImage: "plus")
-                }
         }
         .tint(settingsStore.accentColor.color)
-    }
-}
-
-struct AddPlaceholderView: View {
-    var body: some View {
-        NavigationStack {
-            Text("Add currency")
-                .foregroundStyle(.secondary)
-                .navigationTitle("Add")
-        }
     }
 }
 
