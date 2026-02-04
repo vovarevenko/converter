@@ -24,7 +24,7 @@ struct ContentView: View {
                 SettingsView()
             }
 
-            Tab(value: TabDestination.add, role: .search) {
+            Tab("Add", systemImage: "plus", value: TabDestination.add, role: .search) {
                 Color.clear
             }
         }
