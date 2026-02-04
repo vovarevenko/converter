@@ -8,24 +8,29 @@ import SwiftUI
 struct ConvertView: View {
     @Environment(CurrencyStore.self) private var currencyStore
     @Environment(SettingsStore.self) private var settingsStore
+    var isEditMode: Bool = false
 
     var body: some View {
         NavigationStack {
             List {
                 ForEach(currencyStore.currencies) { currency in
-                    CurrencyRow(
-                        currency: currency,
-                        value: currencyStore.getValue(for: currency),
-                        isActive: currencyStore.activeCurrencyId == currency.id,
-                        accentColor: settingsStore.accentColor.color
-                    )
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        currencyStore.setActive(currency)
+                    if isEditMode {
+                        EditCurrencyRow(currency: currency)
+                    } else {
+                        CurrencyRow(
+                            currency: currency,
+                            value: currencyStore.getValue(for: currency),
+                            isActive: currencyStore.activeCurrencyId == currency.id,
+                            accentColor: settingsStore.accentColor.color
+                        )
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            currencyStore.setActive(currency)
+                        }
                     }
                 }
             }
-            .navigationTitle("Convert")
+            .navigationTitle(isEditMode ? "Edit" : "Convert")
             .refreshable {
                 await currencyStore.refresh()
             }
@@ -61,8 +66,14 @@ struct CurrencyRow: View {
     }
 }
 
-#Preview {
-    ConvertView()
+#Preview("Convert Mode") {
+    ConvertView(isEditMode: false)
+        .environment(CurrencyStore())
+        .environment(SettingsStore())
+}
+
+#Preview("Edit Mode") {
+    ConvertView(isEditMode: true)
         .environment(CurrencyStore())
         .environment(SettingsStore())
 }

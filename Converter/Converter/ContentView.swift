@@ -10,14 +10,18 @@ struct ContentView: View {
     @State private var selectedTab: TabDestination = .convert
     @State private var showingAddSheet = false
 
+    private var isEditMode: Bool {
+        selectedTab == .edit
+    }
+
     var body: some View {
         TabView(selection: $selectedTab) {
             Tab("Convert", systemImage: "arrow.left.arrow.right", value: .convert) {
-                ConvertView()
+                ConvertView(isEditMode: false)
             }
 
             Tab("Edit", systemImage: "list.bullet", value: .edit) {
-                EditView()
+                ConvertView(isEditMode: true)
             }
 
             Tab("Settings", systemImage: "gear", value: .settings) {
