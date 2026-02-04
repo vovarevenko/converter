@@ -26,8 +26,21 @@ class CurrencyStore {
             Currency(code: "ETH", name: "Ethereum", rateToUSD: 0.000466, isCrypto: true)
         ]
 
+        // Set USD as active currency with initial value of 100
+        if let usd = currencies.first(where: { $0.code == "USD" }) {
+            activeCurrencyId = usd.id
+            values[usd.id] = 100.0
+            recalculateValues(from: usd, amount: 100.0)
+        }
+    }
+
+    func recalculateValues(from sourceCurrency: Currency, amount: Double) {
+        // Convert source amount to USD first
+        let amountInUSD = amount / sourceCurrency.rateToUSD
+
+        // Calculate values for all currencies
         for currency in currencies {
-            values[currency.id] = 0.0
+            values[currency.id] = amountInUSD * currency.rateToUSD
         }
     }
 
@@ -41,6 +54,7 @@ class CurrencyStore {
 
     func setValue(_ value: Double, for currency: Currency) {
         values[currency.id] = value
+        recalculateValues(from: currency, amount: value)
     }
 
     func refresh() async {
