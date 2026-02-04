@@ -8,6 +8,11 @@ import Observation
 
 @Observable
 class CurrencyStore {
+    private enum Keys {
+        static let activeCurrencyCode = "currency.activeCurrencyCode"
+        static let activeValue = "currency.activeValue"
+    }
+
     var currencies: [Currency] = []
     var values: [UUID: Double] = [:]
     var activeCurrencyId: UUID?
@@ -15,6 +20,7 @@ class CurrencyStore {
 
     init() {
         loadDefaultCurrencies()
+        loadSavedState()
     }
 
     private func loadDefaultCurrencies() {
@@ -34,6 +40,34 @@ class CurrencyStore {
         }
     }
 
+    private func loadSavedState() {
+        let defaults = UserDefaults.standard
+
+        guard let savedCode = defaults.string(forKey: Keys.activeCurrencyCode),
+              let currency = currencies.first(where: { $0.code == savedCode }) else {
+            return
+        }
+
+        let savedValue = defaults.double(forKey: Keys.activeValue)
+        guard savedValue > 0 else { return }
+
+        activeCurrencyId = currency.id
+        values[currency.id] = savedValue
+        recalculateValues(from: currency, amount: savedValue)
+    }
+
+    private func saveState() {
+        guard let activeId = activeCurrencyId,
+              let activeCurrency = currencies.first(where: { $0.id == activeId }),
+              let value = values[activeId] else {
+            return
+        }
+
+        let defaults = UserDefaults.standard
+        defaults.set(activeCurrency.code, forKey: Keys.activeCurrencyCode)
+        defaults.set(value, forKey: Keys.activeValue)
+    }
+
     func recalculateValues(from sourceCurrency: Currency, amount: Double) {
         // Convert source amount to USD first
         let amountInUSD = amount / sourceCurrency.rateToUSD
@@ -46,6 +80,7 @@ class CurrencyStore {
 
     func setActive(_ currency: Currency) {
         activeCurrencyId = currency.id
+        saveState()
     }
 
     func getValue(for currency: Currency) -> Double {
@@ -55,6 +90,7 @@ class CurrencyStore {
     func setValue(_ value: Double, for currency: Currency) {
         values[currency.id] = value
         recalculateValues(from: currency, amount: value)
+        saveState()
     }
 
     func refresh() async {

@@ -38,8 +38,45 @@ enum AccentColorOption: String, CaseIterable, Identifiable {
 
 @Observable
 class SettingsStore {
-    var themeMode: ThemeMode = .system
-    var accentColor: AccentColorOption = .blue
+    private enum Keys {
+        static let themeMode = "settings.themeMode"
+        static let accentColor = "settings.accentColor"
+    }
+
+    private var isLoading = false
+
+    var themeMode: ThemeMode = .system {
+        didSet { if !isLoading { save() } }
+    }
+    var accentColor: AccentColorOption = .blue {
+        didSet { if !isLoading { save() } }
+    }
+
+    init() {
+        load()
+    }
+
+    private func load() {
+        isLoading = true
+        let defaults = UserDefaults.standard
+
+        if let themeModeRaw = defaults.string(forKey: Keys.themeMode),
+           let themeMode = ThemeMode(rawValue: themeModeRaw) {
+            self.themeMode = themeMode
+        }
+
+        if let accentColorRaw = defaults.string(forKey: Keys.accentColor),
+           let accentColor = AccentColorOption(rawValue: accentColorRaw) {
+            self.accentColor = accentColor
+        }
+        isLoading = false
+    }
+
+    private func save() {
+        let defaults = UserDefaults.standard
+        defaults.set(themeMode.rawValue, forKey: Keys.themeMode)
+        defaults.set(accentColor.rawValue, forKey: Keys.accentColor)
+    }
 }
 
 extension Color {
