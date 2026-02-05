@@ -27,6 +27,13 @@ struct Currency: Identifiable, Equatable {
         case "RUB": "₽"
         case "BTC": "₿"
         case "ETH": "Ξ"
+        case "VND": "₫"
+        case "CNY": "¥"
+        case "GBP": "£"
+        case "UAH": "₴"
+        case "KRW": "₩"
+        case "JPY": "JP¥"
+        case "CAD": "CA$"
         default: code
         }
     }
