@@ -59,15 +59,15 @@ struct CurrencyRow: View {
 
     var body: some View {
         HStack {
-            if isEditMode {
-                Button(action: onDelete) {
-                    Image(systemName: "minus.circle.fill")
-                        .foregroundStyle(.red)
-                        .font(.title2)
-                }
-                .buttonStyle(.plain)
-                .transition(.move(edge: .leading).combined(with: .opacity))
+            Button(action: onDelete) {
+                Image(systemName: "minus.circle.fill")
+                    .foregroundStyle(.red)
+                    .font(.title2)
             }
+            .buttonStyle(.plain)
+            .frame(width: isEditMode ? nil : 0)
+            .opacity(isEditMode ? 1 : 0)
+            .clipped()
 
             VStack(alignment: .leading) {
                 Text(currency.name)
