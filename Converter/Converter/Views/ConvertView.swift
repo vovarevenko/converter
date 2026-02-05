@@ -79,19 +79,19 @@ struct CurrencyRow: View {
 
             Spacer()
 
-            if isEditMode {
-                Image(systemName: "line.3.horizontal")
-                    .foregroundStyle(.secondary)
-                    .font(.title3)
-                    .transition(.move(edge: .trailing).combined(with: .opacity))
-            } else {
+            ZStack(alignment: .trailing) {
                 Text(currency.formatValue(value))
                     .font(.body.monospacedDigit())
                     .foregroundStyle(isActive ? .white : .primary)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 4)
                     .background(isActive ? accentColor : .clear, in: .capsule)
-                    .transition(.move(edge: .trailing).combined(with: .opacity))
+                    .opacity(isEditMode ? 0 : 1)
+
+                Image(systemName: "line.3.horizontal")
+                    .foregroundStyle(.secondary)
+                    .font(.title3)
+                    .opacity(isEditMode ? 1 : 0)
             }
         }
         .contentShape(Rectangle())
