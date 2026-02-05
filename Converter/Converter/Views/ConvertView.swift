@@ -71,7 +71,6 @@ struct CurrencyRow: View {
 
             VStack(alignment: .leading) {
                 Text(currency.name)
-                    .font(.body)
                 Text(currency.code)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)

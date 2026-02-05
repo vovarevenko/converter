@@ -20,22 +20,18 @@ struct Currency: Identifiable, Equatable {
         self.isCrypto = isCrypto
     }
 
-    var symbol: String {
+    private var symbol: String {
         switch code {
-        case "USD": return "$"
-        case "EUR": return "€"
-        case "RUB": return "₽"
-        case "BTC": return "₿"
-        case "ETH": return "Ξ"
-        default: return code
+        case "USD": "$"
+        case "EUR": "€"
+        case "RUB": "₽"
+        case "BTC": "₿"
+        case "ETH": "Ξ"
+        default: code
         }
     }
 
     func formatValue(_ value: Double) -> String {
-        if isCrypto {
-            return String(format: "%.6f %@", value, symbol)
-        } else {
-            return String(format: "%.2f %@", value, symbol)
-        }
+        String(format: isCrypto ? "%.6f %@" : "%.2f %@", value, symbol)
     }
 }

@@ -3,8 +3,6 @@
 //  Converter
 //
 
-import Foundation
-import Observation
 import SwiftUI
 
 @Observable
@@ -15,9 +13,8 @@ class CurrencyStore {
     }
 
     var currencies: [Currency] = []
-    var values: [UUID: Double] = [:]
     var activeCurrencyId: UUID?
-    var isLoading: Bool = false
+    private var values: [UUID: Double] = [:]
 
     init() {
         loadDefaultCurrencies()
@@ -41,10 +38,8 @@ class CurrencyStore {
             Currency(code: "CAD", name: "Canadian Dollar", rateToUSD: 1.37)
         ]
 
-        // Set USD as active currency with initial value of 100
         if let usd = currencies.first(where: { $0.code == "USD" }) {
             activeCurrencyId = usd.id
-            values[usd.id] = 100.0
             recalculateValues(from: usd, amount: 100.0)
         }
     }
@@ -53,15 +48,13 @@ class CurrencyStore {
         let defaults = UserDefaults.standard
 
         guard let savedCode = defaults.string(forKey: Keys.activeCurrencyCode),
-              let currency = currencies.first(where: { $0.code == savedCode }) else {
+              let currency = currencies.first(where: { $0.code == savedCode }),
+              defaults.double(forKey: Keys.activeValue) > 0 else {
             return
         }
 
         let savedValue = defaults.double(forKey: Keys.activeValue)
-        guard savedValue > 0 else { return }
-
         activeCurrencyId = currency.id
-        values[currency.id] = savedValue
         recalculateValues(from: currency, amount: savedValue)
     }
 
@@ -72,16 +65,12 @@ class CurrencyStore {
             return
         }
 
-        let defaults = UserDefaults.standard
-        defaults.set(activeCurrency.code, forKey: Keys.activeCurrencyCode)
-        defaults.set(value, forKey: Keys.activeValue)
+        UserDefaults.standard.set(activeCurrency.code, forKey: Keys.activeCurrencyCode)
+        UserDefaults.standard.set(value, forKey: Keys.activeValue)
     }
 
-    func recalculateValues(from sourceCurrency: Currency, amount: Double) {
-        // Convert source amount to USD first
+    private func recalculateValues(from sourceCurrency: Currency, amount: Double) {
         let amountInUSD = amount / sourceCurrency.rateToUSD
-
-        // Calculate values for all currencies
         for currency in currencies {
             values[currency.id] = amountInUSD * currency.rateToUSD
         }
@@ -93,19 +82,11 @@ class CurrencyStore {
     }
 
     func getValue(for currency: Currency) -> Double {
-        return values[currency.id] ?? 0.0
-    }
-
-    func setValue(_ value: Double, for currency: Currency) {
-        values[currency.id] = value
-        recalculateValues(from: currency, amount: value)
-        saveState()
+        values[currency.id] ?? 0.0
     }
 
     func refresh() async {
-        isLoading = true
         try? await Task.sleep(for: .seconds(2))
-        isLoading = false
     }
 
     func deleteCurrency(_ currency: Currency) {

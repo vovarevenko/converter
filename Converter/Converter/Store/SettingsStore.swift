@@ -4,7 +4,6 @@
 //
 
 import SwiftUI
-import Observation
 
 enum ThemeMode: String, CaseIterable {
     case system = "System"
