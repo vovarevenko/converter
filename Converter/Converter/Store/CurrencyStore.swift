@@ -5,6 +5,7 @@
 
 import Foundation
 import Observation
+import SwiftUI
 
 @Observable
 class CurrencyStore {
@@ -113,5 +114,9 @@ class CurrencyStore {
         if activeCurrencyId == currency.id {
             activeCurrencyId = nil
         }
+    }
+
+    func moveCurrency(from source: IndexSet, to destination: Int) {
+        currencies.move(fromOffsets: source, toOffset: destination)
     }
 }
