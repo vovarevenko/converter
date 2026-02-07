@@ -55,6 +55,12 @@ class CurrencyStore {
         activeCurrencyCode = rate.currency.code
     }
 
+    func convert(from currencyCode: String, amount: Double) {
+        guard let rate = rates.first(where: { $0.currency.code == currencyCode }) else { return }
+        activeCurrencyCode = currencyCode
+        recalculateValues(from: rate, amount: amount)
+    }
+
     func getValue(for rate: Rate) -> Double {
         values[rate.currency.code] ?? 0.0
     }

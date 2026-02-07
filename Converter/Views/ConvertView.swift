@@ -9,6 +9,7 @@ struct ConvertView: View {
     @Environment(CurrencyStore.self) private var currencyStore
     @Environment(SettingsStore.self) private var settingsStore
     @State private var isEditMode = false
+    @State private var selectedRateForInput: Rate?
 
     var body: some View {
         NavigationStack {
@@ -34,7 +35,7 @@ struct ConvertView: View {
                                 isActive: currencyStore.activeCurrencyCode == rate.currency.code,
                                 accentColor: settingsStore.accentColor.color,
                                 isEditMode: isEditMode,
-                                onTap: { currencyStore.setActive(rate) },
+                                onTap: { selectedRateForInput = rate },
                                 onDelete: { currencyStore.deleteCurrency(rate) }
                             )
                         }
@@ -59,6 +60,11 @@ struct ConvertView: View {
                     }
                     .tint(.primary)
                 }
+            }
+            .sheet(item: $selectedRateForInput) { rate in
+                NumericKeyboardView(rate: rate)
+                    .presentationDetents([.medium])
+                    .presentationDragIndicator(.visible)
             }
         }
     }
