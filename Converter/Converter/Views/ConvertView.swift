@@ -12,20 +12,39 @@ struct ConvertView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                ForEach(currencyStore.currencies) { currency in
-                    CurrencyRow(
-                        currency: currency,
-                        value: currencyStore.getValue(for: currency),
-                        isActive: currencyStore.activeCurrencyId == currency.id,
-                        accentColor: settingsStore.accentColor.color,
-                        isEditMode: isEditMode,
-                        onTap: { currencyStore.setActive(currency) },
-                        onDelete: { currencyStore.deleteCurrency(currency) }
-                    )
-                }
-                .onMove { from, to in
-                    currencyStore.moveCurrency(from: from, to: to)
+            ZStack {
+                if currencyStore.isLoading && currencyStore.rates.isEmpty {
+                    ProgressView()
+                } else if let errorMessage = currencyStore.errorMessage, currencyStore.rates.isEmpty {
+                    ContentUnavailableView {
+                        Label("Connection Error", systemImage: "wifi.slash")
+                    } description: {
+                        Text(errorMessage)
+                    } actions: {
+                        Button("Try Again") {
+                            Task { await currencyStore.refresh() }
+                        }
+                    }
+                } else {
+                    List {
+                        ForEach(currencyStore.rates) { rate in
+                            CurrencyRow(
+                                rate: rate,
+                                value: currencyStore.getValue(for: rate),
+                                isActive: currencyStore.activeCurrencyCode == rate.currency.code,
+                                accentColor: settingsStore.accentColor.color,
+                                isEditMode: isEditMode,
+                                onTap: { currencyStore.setActive(rate) },
+                                onDelete: { currencyStore.deleteCurrency(rate) }
+                            )
+                        }
+                        .onMove { from, to in
+                            currencyStore.moveCurrency(from: from, to: to)
+                        }
+                    }
+                    .refreshable {
+                        await currencyStore.refresh()
+                    }
                 }
             }
             .navigationTitle("Convert")
@@ -41,15 +60,12 @@ struct ConvertView: View {
                     .tint(.primary)
                 }
             }
-            .refreshable {
-                await currencyStore.refresh()
-            }
         }
     }
 }
 
 struct CurrencyRow: View {
-    let currency: Currency
+    let rate: Rate
     let value: Double
     let isActive: Bool
     let accentColor: Color
@@ -70,8 +86,8 @@ struct CurrencyRow: View {
             .clipped()
 
             VStack(alignment: .leading) {
-                Text(currency.name)
-                Text(currency.code)
+                Text(rate.currency.title)
+                Text(rate.currency.code)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
@@ -80,7 +96,7 @@ struct CurrencyRow: View {
             Spacer()
 
             ZStack(alignment: .trailing) {
-                Text(currency.formatValue(value))
+                Text(rate.currency.formatValue(value))
                     .font(.body.monospacedDigit())
                     .foregroundStyle(isActive ? .white : .primary)
                     .padding(.horizontal, 10)

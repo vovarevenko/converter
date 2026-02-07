@@ -7,20 +7,20 @@ import SwiftUI
 
 struct ContentView: View {
     @Environment(SettingsStore.self) private var settingsStore
-    @State private var selectedTab: TabDestination = .convert
+    @State private var selectedTab: Tab = .convert
     @State private var showingAddSheet = false
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            Tab("Convert", systemImage: "arrow.left.arrow.right", value: .convert) {
+            SwiftUI.Tab("Convert", systemImage: "arrow.left.arrow.right", value: .convert) {
                 ConvertView()
             }
 
-            Tab("Settings", systemImage: "gear", value: .settings) {
+            SwiftUI.Tab("Settings", systemImage: "gear", value: .settings) {
                 SettingsView()
             }
 
-            Tab("Add", systemImage: "plus", value: TabDestination.add, role: .search) {
+            SwiftUI.Tab("Add", systemImage: "plus", value: Tab.add, role: .search) {
                 Color.clear
             }
         }
@@ -35,12 +35,10 @@ struct ContentView: View {
             AddCurrencyView()
         }
     }
-}
 
-enum TabDestination: Hashable {
-    case convert
-    case settings
-    case add
+    private enum Tab: Hashable {
+        case convert, settings, add
+    }
 }
 
 #Preview {
