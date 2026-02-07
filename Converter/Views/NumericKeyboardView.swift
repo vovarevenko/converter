@@ -45,16 +45,7 @@ struct NumericKeyboardView: View {
 
                 Spacer()
 
-                Button {
-                    dismiss()
-                } label: {
-                    Image(systemName: "xmark")
-                        .font(.body.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                }
-                .buttonStyle(.bordered)
-                .buttonBorderShape(.circle)
-                .tint(.secondary)
+                DismissButton()
             }
             .padding(.horizontal, 24)
             .padding(.top, 20)

@@ -33,6 +33,8 @@ struct ContentView: View {
         }
         .sheet(isPresented: $showingAddSheet) {
             AddCurrencyView()
+                .presentationDetents([.medium])
+                .presentationDragIndicator(.visible)
         }
     }
 

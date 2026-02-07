@@ -6,21 +6,25 @@
 import SwiftUI
 
 struct AddCurrencyView: View {
-    @Environment(\.dismiss) private var dismiss
-
     var body: some View {
-        NavigationStack {
+        VStack(spacing: 20) {
+            HStack {
+                Text("Add")
+                    .font(.headline)
+
+                Spacer()
+
+                DismissButton()
+            }
+            .padding(.horizontal, 24)
+            .padding(.top, 20)
+
+            Spacer()
+
             Text("Add currency")
                 .foregroundStyle(.secondary)
-            .navigationTitle("Add")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
-            }
+
+            Spacer()
         }
     }
 }
