@@ -91,10 +91,6 @@ class CurrencyStore {
         isLoading = false
     }
 
-    func setActive(_ rate: Rate) {
-        activeCurrencyCode = rate.currency.code
-    }
-
     func convert(from currencyCode: String, amount: Double) {
         guard let rate = allRates.first(where: { $0.currency.code == currencyCode }) else { return }
         activeCurrencyCode = currencyCode

@@ -10,10 +10,6 @@ struct ConverterApp: App {
     @State private var currencyStore = CurrencyStore()
     @State private var settingsStore = SettingsStore()
 
-    init() {
-        cleanUpLegacyData()
-    }
-
     var body: some Scene {
         WindowGroup {
             ContentView()
@@ -23,9 +19,4 @@ struct ConverterApp: App {
         }
     }
 
-    private func cleanUpLegacyData() {
-        let defaults = UserDefaults.standard
-        defaults.removeObject(forKey: "currency.activeCurrencyCode")
-        defaults.removeObject(forKey: "currency.activeValue")
-    }
 }
