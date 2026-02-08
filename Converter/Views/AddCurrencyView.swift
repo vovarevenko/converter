@@ -7,6 +7,7 @@ import SwiftUI
 
 struct AddCurrencyView: View {
     @Environment(CurrencyStore.self) private var currencyStore
+    @Environment(SettingsStore.self) private var settingsStore
     @Environment(\.dismiss) private var dismiss
     @State private var searchText = ""
 
@@ -40,7 +41,7 @@ struct AddCurrencyView: View {
 
                             if currencyStore.isSelected(rate.currency.code) {
                                 Image(systemName: "checkmark")
-                                    .foregroundStyle(.blue)
+                                    .foregroundStyle(settingsStore.accentColor.color)
                                     .font(.body.weight(.semibold))
                             }
                         }
@@ -72,4 +73,5 @@ struct AddCurrencyView: View {
 #Preview {
     AddCurrencyView()
         .environment(CurrencyStore())
+        .environment(SettingsStore())
 }
