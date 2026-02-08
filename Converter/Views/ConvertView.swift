@@ -26,6 +26,12 @@ struct ConvertView: View {
                             Task { await currencyStore.refresh() }
                         }
                     }
+                } else if !currencyStore.allRates.isEmpty && currencyStore.rates.isEmpty {
+                    ContentUnavailableView {
+                        Label("No Currencies", systemImage: "plus.circle")
+                    } description: {
+                        Text("Tap + to add currencies")
+                    }
                 } else {
                     List {
                         ForEach(currencyStore.rates) { rate in

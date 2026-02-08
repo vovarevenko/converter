@@ -7,20 +7,51 @@ import SwiftUI
 
 @Observable
 class CurrencyStore {
-    var rates: [Rate] = []
+    var allRates: [Rate] = []
     var activeCurrencyCode: String?
     var isLoading = false
     var errorMessage: String?
+
+    var selectedCurrencyCodes: [String] = [] {
+        didSet { if !isLoadingPreferences { saveSelectedCodes() } }
+    }
+
+    var rates: [Rate] {
+        selectedCurrencyCodes.compactMap { code in
+            allRates.first { $0.currency.code == code }
+        }
+    }
+
     private var values: [String: Double] = [:]
+    private var isLoadingPreferences = false
     private let service = RatesService()
 
+    private enum Keys {
+        static let selectedCurrencyCodes = "currency.selectedCodes"
+    }
+
+    private static let defaultCodes = ["USD", "EUR", "GBP", "JPY", "UAH"]
+
     init() {
+        loadSelectedCodes()
         Task { await refresh() }
+    }
+
+    private func loadSelectedCodes() {
+        isLoadingPreferences = true
+        if let codes = UserDefaults.standard.stringArray(forKey: Keys.selectedCurrencyCodes) {
+            selectedCurrencyCodes = codes
+        }
+        isLoadingPreferences = false
+    }
+
+    private func saveSelectedCodes() {
+        UserDefaults.standard.set(selectedCurrencyCodes, forKey: Keys.selectedCurrencyCodes)
     }
 
     private func recalculateValues(from sourceRate: Rate, amount: Double) {
         let amountInUSD = amount * sourceRate.rate
-        for rate in rates {
+        for rate in allRates {
             values[rate.currency.code] = amountInUSD / rate.rate
         }
     }
@@ -31,10 +62,19 @@ class CurrencyStore {
 
         do {
             let fetched = try await service.fetchRates()
-            rates = fetched.filter { $0.rate != 0 }
+            allRates = fetched.filter { $0.rate != 0 }
+
+            if selectedCurrencyCodes.isEmpty {
+                isLoadingPreferences = true
+                selectedCurrencyCodes = Self.defaultCodes.filter { code in
+                    allRates.contains { $0.currency.code == code }
+                }
+                isLoadingPreferences = false
+                saveSelectedCodes()
+            }
 
             if let activeCode = activeCurrencyCode,
-               let activeRate = rates.first(where: { $0.currency.code == activeCode }),
+               let activeRate = allRates.first(where: { $0.currency.code == activeCode }),
                let currentValue = values[activeCode] {
                 recalculateValues(from: activeRate, amount: currentValue)
             } else {
@@ -56,7 +96,7 @@ class CurrencyStore {
     }
 
     func convert(from currencyCode: String, amount: Double) {
-        guard let rate = rates.first(where: { $0.currency.code == currencyCode }) else { return }
+        guard let rate = allRates.first(where: { $0.currency.code == currencyCode }) else { return }
         activeCurrencyCode = currencyCode
         recalculateValues(from: rate, amount: amount)
     }
@@ -65,15 +105,36 @@ class CurrencyStore {
         values[rate.currency.code] ?? 0.0
     }
 
+    func toggleCurrency(_ code: String) {
+        if let index = selectedCurrencyCodes.firstIndex(of: code) {
+            selectedCurrencyCodes.remove(at: index)
+            if activeCurrencyCode == code {
+                activeCurrencyCode = selectedCurrencyCodes.first
+            }
+        } else {
+            selectedCurrencyCodes.append(code)
+            if let rate = allRates.first(where: { $0.currency.code == code }),
+               let activeCode = activeCurrencyCode,
+               let activeRate = allRates.first(where: { $0.currency.code == activeCode }),
+               let currentValue = values[activeCode] {
+                let amountInUSD = currentValue * activeRate.rate
+                values[code] = amountInUSD / rate.rate
+            }
+        }
+    }
+
+    func isSelected(_ code: String) -> Bool {
+        selectedCurrencyCodes.contains(code)
+    }
+
     func deleteCurrency(_ rate: Rate) {
-        rates.removeAll { $0.id == rate.id }
-        values.removeValue(forKey: rate.currency.code)
+        selectedCurrencyCodes.removeAll { $0 == rate.currency.code }
         if activeCurrencyCode == rate.currency.code {
-            activeCurrencyCode = nil
+            activeCurrencyCode = selectedCurrencyCodes.first
         }
     }
 
     func moveCurrency(from source: IndexSet, to destination: Int) {
-        rates.move(fromOffsets: source, toOffset: destination)
+        selectedCurrencyCodes.move(fromOffsets: source, toOffset: destination)
     }
 }
