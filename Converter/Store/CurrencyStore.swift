@@ -18,7 +18,7 @@ class CurrencyStore {
 
     var rates: [Rate] {
         selectedCurrencyCodes.compactMap { code in
-            allRates.first { $0.currency.code == code }
+            rate(for: code)
         }
     }
 
@@ -31,6 +31,7 @@ class CurrencyStore {
     }
 
     private static let defaultCodes = ["USD", "EUR", "GBP", "JPY", "UAH"]
+    private static let defaultAmount: Double = 100
 
     init() {
         loadSelectedCodes()
@@ -47,6 +48,10 @@ class CurrencyStore {
 
     private func saveSelectedCodes() {
         UserDefaults.standard.set(selectedCurrencyCodes, forKey: Keys.selectedCurrencyCodes)
+    }
+
+    private func rate(for code: String) -> Rate? {
+        allRates.first { $0.currency.code == code }
     }
 
     private func recalculateValues(from sourceRate: Rate, amount: Double) {
@@ -74,14 +79,14 @@ class CurrencyStore {
             }
 
             if let activeCode = activeCurrencyCode,
-               let activeRate = allRates.first(where: { $0.currency.code == activeCode }),
+               let activeRate = rate(for: activeCode),
                let currentValue = values[activeCode] {
                 recalculateValues(from: activeRate, amount: currentValue)
             } else {
                 let initial = rates.first(where: { $0.currency.code == "USD" }) ?? rates.first
                 if let initial {
                     activeCurrencyCode = initial.currency.code
-                    recalculateValues(from: initial, amount: 100.0)
+                    recalculateValues(from: initial, amount: Self.defaultAmount)
                 }
             }
         } catch {
@@ -92,7 +97,7 @@ class CurrencyStore {
     }
 
     func convert(from currencyCode: String, amount: Double) {
-        guard let rate = allRates.first(where: { $0.currency.code == currencyCode }) else { return }
+        guard let rate = rate(for: currencyCode) else { return }
         activeCurrencyCode = currencyCode
         recalculateValues(from: rate, amount: amount)
     }
@@ -102,19 +107,14 @@ class CurrencyStore {
     }
 
     func toggleCurrency(_ code: String) {
-        if let index = selectedCurrencyCodes.firstIndex(of: code) {
-            selectedCurrencyCodes.remove(at: index)
-            if activeCurrencyCode == code {
-                activeCurrencyCode = selectedCurrencyCodes.first
-            }
+        if selectedCurrencyCodes.contains(code) {
+            deleteCurrency(code: code)
         } else {
             selectedCurrencyCodes.append(code)
-            if let rate = allRates.first(where: { $0.currency.code == code }),
-               let activeCode = activeCurrencyCode,
-               let activeRate = allRates.first(where: { $0.currency.code == activeCode }),
+            if let activeCode = activeCurrencyCode,
+               let activeRate = rate(for: activeCode),
                let currentValue = values[activeCode] {
-                let amountInUSD = currentValue * activeRate.rate
-                values[code] = amountInUSD / rate.rate
+                recalculateValues(from: activeRate, amount: currentValue)
             }
         }
     }
@@ -123,9 +123,9 @@ class CurrencyStore {
         selectedCurrencyCodes.contains(code)
     }
 
-    func deleteCurrency(_ rate: Rate) {
-        selectedCurrencyCodes.removeAll { $0 == rate.currency.code }
-        if activeCurrencyCode == rate.currency.code {
+    func deleteCurrency(code: String) {
+        selectedCurrencyCodes.removeAll { $0 == code }
+        if activeCurrencyCode == code {
             activeCurrencyCode = selectedCurrencyCodes.first
         }
     }

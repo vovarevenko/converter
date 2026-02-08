@@ -42,7 +42,7 @@ struct ConvertView: View {
                                 accentColor: settingsStore.accentColor.color,
                                 isEditMode: isEditMode,
                                 onTap: { selectedRateForInput = rate },
-                                onDelete: { currencyStore.deleteCurrency(rate) }
+                                onDelete: { currencyStore.deleteCurrency(code: rate.currency.code) }
                             )
                         }
                         .onMove { from, to in
