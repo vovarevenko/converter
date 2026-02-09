@@ -66,7 +66,6 @@ struct AddCurrencyView: View {
                 }
             }
         }
-        .presentationBackground(.ultraThinMaterial)
     }
 }
 
