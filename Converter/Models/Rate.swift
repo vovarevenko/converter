@@ -5,7 +5,7 @@
 
 import Foundation
 
-struct Rate: Identifiable, Equatable, Decodable {
+struct Rate: Identifiable, Equatable, Codable {
     let currency: Currency
     let rate: Double
 

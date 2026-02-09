@@ -11,6 +11,7 @@ class CurrencyStore {
     var activeCurrencyCode: String?
     var isLoading = false
     var errorMessage: String?
+    var lastRefreshedAt: Date?
 
     var selectedCurrencyCodes: [String] = [] {
         didSet { if !isLoadingPreferences { saveSelectedCodes() } }
@@ -28,10 +29,13 @@ class CurrencyStore {
 
     private enum Keys {
         static let selectedCurrencyCodes = "currency.selectedCodes"
+        static let cachedRates = "currency.cachedRates"
+        static let cachedAt = "currency.cachedAt"
     }
 
     private static let defaultCodes = ["USD", "EUR", "GBP", "JPY", "UAH"]
     private static let defaultAmount: Double = 100
+    private static let refreshDebounceInterval: TimeInterval = 5 * 60
 
     init() {
         loadSelectedCodes()
@@ -61,6 +65,39 @@ class CurrencyStore {
         }
     }
 
+    // MARK: - Cache
+
+    private func saveCache(_ rates: [Rate]) {
+        guard let data = try? JSONEncoder().encode(rates) else { return }
+        let defaults = UserDefaults.standard
+        defaults.set(data, forKey: Keys.cachedRates)
+        defaults.set(Date(), forKey: Keys.cachedAt)
+    }
+
+    private func loadCache() -> [Rate]? {
+        guard let data = UserDefaults.standard.data(forKey: Keys.cachedRates),
+              let rates = try? JSONDecoder().decode([Rate].self, from: data) else {
+            return nil
+        }
+        return rates
+    }
+
+    private func loadCacheDate() -> Date? {
+        UserDefaults.standard.object(forKey: Keys.cachedAt) as? Date
+    }
+
+    // MARK: - Refresh
+
+    var needsRefresh: Bool {
+        guard let lastRefreshedAt else { return true }
+        return Date().timeIntervalSince(lastRefreshedAt) > Self.refreshDebounceInterval
+    }
+
+    func refreshIfNeeded() async {
+        guard needsRefresh else { return }
+        await refresh()
+    }
+
     func refresh() async {
         isLoading = true
         errorMessage = nil
@@ -68,6 +105,8 @@ class CurrencyStore {
         do {
             let fetched = try await service.fetchRates()
             allRates = fetched.filter { $0.rate != 0 }
+            lastRefreshedAt = Date()
+            saveCache(allRates)
 
             if selectedCurrencyCodes.isEmpty {
                 isLoadingPreferences = true
@@ -89,11 +128,43 @@ class CurrencyStore {
                     recalculateValues(from: initial, amount: Self.defaultAmount)
                 }
             }
+        } catch let urlError as URLError {
+            loadCacheIfEmpty()
+            switch urlError.code {
+            case .notConnectedToInternet, .networkConnectionLost:
+                errorMessage = "No internet connection. Please check your network."
+            case .timedOut:
+                errorMessage = "Request timed out. Please try again."
+            default:
+                errorMessage = "Failed to load exchange rates. Please try again later."
+            }
         } catch {
-            errorMessage = error.localizedDescription
+            loadCacheIfEmpty()
+            errorMessage = "Failed to load exchange rates. Please try again later."
         }
 
         isLoading = false
+    }
+
+    private func loadCacheIfEmpty() {
+        guard allRates.isEmpty, let cached = loadCache() else { return }
+        allRates = cached
+        lastRefreshedAt = loadCacheDate()
+
+        if selectedCurrencyCodes.isEmpty {
+            isLoadingPreferences = true
+            selectedCurrencyCodes = Self.defaultCodes.filter { code in
+                allRates.contains { $0.currency.code == code }
+            }
+            isLoadingPreferences = false
+            saveSelectedCodes()
+        }
+
+        let initial = rates.first(where: { $0.currency.code == "USD" }) ?? rates.first
+        if let initial {
+            activeCurrencyCode = initial.currency.code
+            recalculateValues(from: initial, amount: Self.defaultAmount)
+        }
     }
 
     func convert(from currencyCode: String, amount: Double) {
