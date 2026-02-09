@@ -16,15 +16,25 @@ struct ConvertView: View {
             ZStack {
                 if currencyStore.isLoading && currencyStore.rates.isEmpty {
                     ProgressView()
-                } else if let errorMessage = currencyStore.errorMessage, currencyStore.rates.isEmpty {
+                } else if currencyStore.errorMessage != nil, currencyStore.rates.isEmpty {
                     ContentUnavailableView {
                         Label("Connection Error", systemImage: "wifi.slash")
                     } description: {
-                        Text(errorMessage)
+                        Text("Failed to load exchange rates.\nCheck your connection and try again.")
                     } actions: {
-                        Button("Try Again") {
+                        Button {
                             Task { await currencyStore.refresh() }
+                        } label: {
+                            Group {
+                                if currencyStore.isLoading {
+                                    ProgressView()
+                                } else {
+                                    Text("Try Again")
+                                }
+                            }
+                            .frame(minWidth: 120)
                         }
+                        .disabled(currencyStore.isLoading)
                     }
                 } else if !currencyStore.allRates.isEmpty && currencyStore.rates.isEmpty {
                     ContentUnavailableView {
