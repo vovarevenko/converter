@@ -95,6 +95,7 @@ struct NumericKeyboardView: View {
 
             // Convert button
             Button {
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
                 let amount = Double(inputText) ?? 0
                 if amount > 0 {
                     currencyStore.convert(from: rate.currency.code, amount: amount)
@@ -114,6 +115,7 @@ struct NumericKeyboardView: View {
     }
 
     private func handleTap(_ button: KeypadButton) {
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
         switch button {
         case .digit(let d):
             if inputText == "0" && d == "0" { return }
@@ -184,5 +186,14 @@ private struct KeypadButtonView: View {
         .buttonStyle(.plain)
         .disabled(button == .decimal && decimalDisabled)
         .opacity(button == .decimal && decimalDisabled ? 0.3 : 1)
+        .accessibilityLabel(accessibilityLabel)
+    }
+
+    private var accessibilityLabel: String {
+        switch button {
+        case .digit(let d): return d
+        case .decimal: return "Decimal separator"
+        case .delete: return "Delete"
+        }
     }
 }

@@ -20,5 +20,6 @@ struct DismissButton: View {
         .buttonStyle(.bordered)
         .buttonBorderShape(.circle)
         .tint(.secondary)
+        .accessibilityLabel("Dismiss")
     }
 }

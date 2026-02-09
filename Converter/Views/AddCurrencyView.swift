@@ -27,6 +27,7 @@ struct AddCurrencyView: View {
             List {
                 ForEach(filteredRates) { rate in
                     Button {
+                        UISelectionFeedbackGenerator().selectionChanged()
                         currencyStore.toggleCurrency(rate.currency.code)
                     } label: {
                         HStack {
@@ -48,6 +49,9 @@ struct AddCurrencyView: View {
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel(rate.currency.title)
+                    .accessibilityValue(currencyStore.isSelected(rate.currency.code) ? "Selected" : "Not selected")
+                    .accessibilityHint("Double tap to toggle")
                 }
             }
             .listStyle(.plain)
