@@ -5,6 +5,50 @@
 
 import SwiftUI
 
+enum NumberFormatOption: String, CaseIterable, Identifiable {
+    case system = "System"
+    case commaDot = "1,234.56"
+    case dotComma = "1.234,56"
+    case spaceComma = "1 234,56"
+    case plain = "1234.56"
+
+    var id: String { rawValue }
+
+    var resolved: NumberFormatOption {
+        guard self == .system else { return self }
+        let formatter = NumberFormatter()
+        formatter.locale = Locale.current
+        formatter.numberStyle = .decimal
+        let decimal = formatter.decimalSeparator ?? "."
+        let grouping = formatter.groupingSeparator ?? ","
+        switch (decimal, grouping) {
+        case (".", ","): return .commaDot
+        case (",", "."): return .dotComma
+        case (",", "\u{00A0}"), (",", " "): return .spaceComma
+        default:
+            return decimal == "." ? .plain : .commaDot
+        }
+    }
+
+    var decimalSeparator: String {
+        switch resolved {
+        case .commaDot, .plain: return "."
+        case .dotComma, .spaceComma: return ","
+        case .system: return "."
+        }
+    }
+
+    var groupingSeparator: String? {
+        switch resolved {
+        case .commaDot: return ","
+        case .dotComma: return "."
+        case .spaceComma: return "\u{00A0}"
+        case .plain: return nil
+        case .system: return nil
+        }
+    }
+}
+
 enum ThemeMode: String, CaseIterable {
     case system = "System"
     case light = "Light"
@@ -40,6 +84,7 @@ class SettingsStore {
     private enum Keys {
         static let themeMode = "settings.themeMode"
         static let accentColor = "settings.accentColor"
+        static let numberFormat = "settings.numberFormat"
     }
 
     private var isLoading = false
@@ -48,6 +93,9 @@ class SettingsStore {
         didSet { if !isLoading { save() } }
     }
     var accentColor: AccentColorOption = .blue {
+        didSet { if !isLoading { save() } }
+    }
+    var numberFormat: NumberFormatOption = .system {
         didSet { if !isLoading { save() } }
     }
 
@@ -68,6 +116,11 @@ class SettingsStore {
            let accentColor = AccentColorOption(rawValue: accentColorRaw) {
             self.accentColor = accentColor
         }
+
+        if let numberFormatRaw = defaults.string(forKey: Keys.numberFormat),
+           let numberFormat = NumberFormatOption(rawValue: numberFormatRaw) {
+            self.numberFormat = numberFormat
+        }
         isLoading = false
     }
 
@@ -75,6 +128,7 @@ class SettingsStore {
         let defaults = UserDefaults.standard
         defaults.set(themeMode.rawValue, forKey: Keys.themeMode)
         defaults.set(accentColor.rawValue, forKey: Keys.accentColor)
+        defaults.set(numberFormat.rawValue, forKey: Keys.numberFormat)
     }
 }
 

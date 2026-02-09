@@ -13,9 +13,30 @@ struct NumericKeyboardView: View {
 
     @State private var inputText = ""
 
+    private var resolvedFormat: NumberFormatOption {
+        settingsStore.numberFormat.resolved
+    }
+
     private var displayText: String {
         let raw = inputText.isEmpty ? "0" : inputText
-        return "\(raw) \(rate.currency.symbol)"
+        let parts = raw.split(separator: ".", maxSplits: 2, omittingEmptySubsequences: false)
+        let integerPart = String(parts[0])
+        let decimalPart = parts.count > 1 ? String(parts[1]) : nil
+
+        var formattedInteger = integerPart
+        if let grouping = resolvedFormat.groupingSeparator, integerPart.count > 3 {
+            var result = ""
+            for (i, char) in integerPart.reversed().enumerated() {
+                if i > 0 && i % 3 == 0 { result = grouping + result }
+                result = String(char) + result
+            }
+            formattedInteger = result
+        }
+
+        if let decimalPart {
+            return "\(formattedInteger)\(resolvedFormat.decimalSeparator)\(decimalPart) \(rate.currency.symbol)"
+        }
+        return "\(formattedInteger) \(rate.currency.symbol)"
     }
 
     private var columns: [GridItem] {
@@ -63,6 +84,7 @@ struct NumericKeyboardView: View {
                 ForEach(buttons) { button in
                     KeypadButtonView(
                         button: button,
+                        decimalSeparator: resolvedFormat.decimalSeparator,
                         decimalDisabled: button == .decimal && rate.currency.decimals == 0
                     ) {
                         handleTap(button)
@@ -136,6 +158,7 @@ private enum KeypadButton: Identifiable, Equatable {
 
 private struct KeypadButtonView: View {
     let button: KeypadButton
+    let decimalSeparator: String
     let decimalDisabled: Bool
     let action: () -> Void
 
@@ -147,7 +170,7 @@ private struct KeypadButtonView: View {
                     Text(d)
                         .font(.title2.weight(.medium))
                 case .decimal:
-                    Text(".")
+                    Text(decimalSeparator)
                         .font(.title2.weight(.medium))
                 case .delete:
                     Image(systemName: "delete.backward")

@@ -50,6 +50,7 @@ struct ConvertView: View {
                                 value: currencyStore.getValue(for: rate),
                                 isActive: currencyStore.activeCurrencyCode == rate.currency.code,
                                 accentColor: settingsStore.accentColor.color,
+                                numberFormat: settingsStore.numberFormat,
                                 isEditMode: isEditMode,
                                 onTap: { selectedRateForInput = rate },
                                 onDelete: { currencyStore.deleteCurrency(code: rate.currency.code) }
@@ -91,6 +92,7 @@ struct CurrencyRow: View {
     let value: Double
     let isActive: Bool
     let accentColor: Color
+    let numberFormat: NumberFormatOption
     let isEditMode: Bool
     let onTap: () -> Void
     let onDelete: () -> Void
@@ -118,7 +120,7 @@ struct CurrencyRow: View {
             Spacer()
 
             ZStack(alignment: .trailing) {
-                Text(rate.currency.formatValue(value))
+                Text(rate.currency.formatValue(value, numberFormat: numberFormat))
                     .font(.body.monospacedDigit())
                     .foregroundStyle(isActive ? .white : .primary)
                     .padding(.horizontal, 10)
