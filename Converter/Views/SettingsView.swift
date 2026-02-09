@@ -22,25 +22,6 @@ struct SettingsView: View {
                     .id(settingsStore.accentColor)
                 }
 
-                Section("Number Format") {
-                    ForEach(NumberFormatOption.allCases) { option in
-                        HStack {
-                            Text(option.rawValue)
-
-                            Spacer()
-
-                            if settingsStore.numberFormat == option {
-                                Image(systemName: "checkmark")
-                                    .foregroundStyle(settingsStore.accentColor.color)
-                            }
-                        }
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            settings.numberFormat = option
-                        }
-                    }
-                }
-
                 Section("Accent Color") {
                     ForEach(AccentColorOption.allCases) { option in
                         HStack {
@@ -60,6 +41,25 @@ struct SettingsView: View {
                         .contentShape(Rectangle())
                         .onTapGesture {
                             settings.accentColor = option
+                        }
+                    }
+                }
+
+                Section("Number Format") {
+                    ForEach(NumberFormatOption.allCases) { option in
+                        HStack {
+                            Text(option.rawValue)
+
+                            Spacer()
+
+                            if settingsStore.numberFormat == option {
+                                Image(systemName: "checkmark")
+                                    .foregroundStyle(settingsStore.accentColor.color)
+                            }
+                        }
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            settings.numberFormat = option
                         }
                     }
                 }
