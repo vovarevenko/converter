@@ -63,16 +63,24 @@ enum ThemeMode: String, CaseIterable {
 
 enum AccentColorOption: String, CaseIterable, Identifiable {
     case blue = "Blue"
-    case red = "Red"
+    case purple = "Purple"
     case fuchsia = "Fuchsia"
+    case red = "Red"
+    case orange = "Orange"
+    case green = "Green"
+    case teal = "Teal"
 
     var id: String { rawValue }
 
     var color: Color {
         switch self {
         case .blue: return Color(hex: "#1976d2")
-        case .red: return Color(hex: "#c10015")
+        case .purple: return Color(hex: "#7b1fa2")
         case .fuchsia: return Color(hex: "#ff00ff")
+        case .red: return Color(hex: "#c10015")
+        case .orange: return Color(hex: "#e65100")
+        case .green: return Color(hex: "#2e7d32")
+        case .teal: return Color(hex: "#00897b")
         }
     }
 }
@@ -127,6 +135,12 @@ class SettingsStore {
         defaults.set(themeMode.rawValue, forKey: Keys.themeMode)
         defaults.set(accentColor.rawValue, forKey: Keys.accentColor)
         defaults.set(numberFormat.rawValue, forKey: Keys.numberFormat)
+    }
+
+    func resetToDefaults() {
+        themeMode = .system
+        accentColor = .blue
+        numberFormat = .system
     }
 }
 

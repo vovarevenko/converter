@@ -7,6 +7,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @Environment(SettingsStore.self) private var settingsStore
+    @State private var showingResetAlert = false
 
     var body: some View {
         @Bindable var settings = settingsStore
@@ -42,6 +43,8 @@ struct SettingsView: View {
                         .onTapGesture {
                             settings.accentColor = option
                         }
+                        .accessibilityLabel(option.rawValue)
+                        .accessibilityValue(settingsStore.accentColor == option ? "Selected" : "")
                     }
                 }
 
@@ -61,11 +64,27 @@ struct SettingsView: View {
                         .onTapGesture {
                             settings.numberFormat = option
                         }
+                        .accessibilityLabel(option.rawValue)
+                        .accessibilityValue(settingsStore.numberFormat == option ? "Selected" : "")
+                    }
+                }
+
+                Section {
+                    Button("Reset to Defaults", role: .destructive) {
+                        showingResetAlert = true
                     }
                 }
             }
             .navigationTitle("Settings")
             .tint(settingsStore.accentColor.color)
+            .alert("Reset Settings", isPresented: $showingResetAlert) {
+                Button("Cancel", role: .cancel) {}
+                Button("Reset", role: .destructive) {
+                    settingsStore.resetToDefaults()
+                }
+            } message: {
+                Text("This will reset all settings to their default values.")
+            }
         }
     }
 }
