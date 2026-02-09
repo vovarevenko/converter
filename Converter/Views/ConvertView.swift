@@ -10,6 +10,8 @@ struct ConvertView: View {
     @Environment(SettingsStore.self) private var settingsStore
     @State private var isEditMode = false
     @State private var selectedRateForInput: Rate?
+    @State private var showingAddSheet = false
+    @State private var copiedCurrencyCode: String?
 
     var body: some View {
         NavigationStack {
@@ -40,24 +42,43 @@ struct ConvertView: View {
                     ContentUnavailableView {
                         Label("No Currencies", systemImage: "plus.circle")
                     } description: {
-                        Text("Tap + to add currencies")
+                        Text("Add currencies to start converting")
+                    } actions: {
+                        Button("Add Currencies") {
+                            showingAddSheet = true
+                        }
                     }
                 } else {
                     List {
                         ForEach(currencyStore.rates) { rate in
+                            let formattedValue = rate.currency.formatValue(
+                                currencyStore.getValue(for: rate),
+                                numberFormat: settingsStore.numberFormat
+                            )
                             CurrencyRow(
                                 rate: rate,
-                                value: currencyStore.getValue(for: rate),
+                                formattedValue: formattedValue,
                                 isActive: currencyStore.activeCurrencyCode == rate.currency.code,
                                 accentColor: settingsStore.accentColor.color,
-                                numberFormat: settingsStore.numberFormat,
                                 isEditMode: isEditMode,
+                                isCopied: copiedCurrencyCode == rate.currency.code,
                                 onTap: { selectedRateForInput = rate },
-                                onDelete: { currencyStore.deleteCurrency(code: rate.currency.code) }
+                                onDelete: { currencyStore.deleteCurrency(code: rate.currency.code) },
+                                onCopy: { copyValue(formattedValue, currencyCode: rate.currency.code) }
                             )
                         }
                         .onMove { from, to in
                             currencyStore.moveCurrency(from: from, to: to)
+                        }
+
+                        if let lastRefreshedAt = currencyStore.lastRefreshedAt {
+                            Section {
+                                Text("Updated \(lastRefreshedAt, format: .relative(presentation: .named))")
+                                    .font(.footnote)
+                                    .foregroundStyle(.secondary)
+                                    .frame(maxWidth: .infinity)
+                                    .listRowBackground(Color.clear)
+                            }
                         }
                     }
                     .refreshable {
@@ -76,6 +97,7 @@ struct ConvertView: View {
                         Image(systemName: isEditMode ? "checkmark" : "pencil")
                     }
                     .tint(.primary)
+                    .accessibilityLabel(isEditMode ? "Done editing" : "Edit currencies")
                 }
             }
             .sheet(item: $selectedRateForInput) { rate in
@@ -83,19 +105,39 @@ struct ConvertView: View {
                     .presentationDetents([.medium])
                     .presentationDragIndicator(.visible)
             }
+            .sheet(isPresented: $showingAddSheet) {
+                AddCurrencyView()
+                    .presentationDetents([.large])
+                    .presentationDragIndicator(.visible)
+            }
+        }
+    }
+
+    private func copyValue(_ value: String, currencyCode: String) {
+        UIPasteboard.general.string = value
+        withAnimation {
+            copiedCurrencyCode = currencyCode
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            withAnimation {
+                if copiedCurrencyCode == currencyCode {
+                    copiedCurrencyCode = nil
+                }
+            }
         }
     }
 }
 
 struct CurrencyRow: View {
     let rate: Rate
-    let value: Double
+    let formattedValue: String
     let isActive: Bool
     let accentColor: Color
-    let numberFormat: NumberFormatOption
     let isEditMode: Bool
+    let isCopied: Bool
     let onTap: () -> Void
     let onDelete: () -> Void
+    let onCopy: () -> Void
 
     var body: some View {
         HStack {
@@ -108,6 +150,7 @@ struct CurrencyRow: View {
             .frame(width: isEditMode ? nil : 0)
             .opacity(isEditMode ? 1 : 0)
             .clipped()
+            .accessibilityLabel("Remove \(rate.currency.title)")
 
             VStack(alignment: .leading) {
                 Text(rate.currency.title)
@@ -120,13 +163,21 @@ struct CurrencyRow: View {
             Spacer()
 
             ZStack(alignment: .trailing) {
-                Text(rate.currency.formatValue(value, numberFormat: numberFormat))
-                    .font(.body.monospacedDigit())
-                    .foregroundStyle(isActive ? .white : .primary)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
-                    .background(isActive ? accentColor : .clear, in: .capsule)
-                    .opacity(isEditMode ? 0 : 1)
+                Group {
+                    if isCopied {
+                        Label("Copied", systemImage: "checkmark")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    } else {
+                        Text(formattedValue)
+                            .font(.body.monospacedDigit())
+                            .foregroundStyle(isActive ? .white : .primary)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 4)
+                            .background(isActive ? accentColor : .clear, in: .capsule)
+                    }
+                }
+                .opacity(isEditMode ? 0 : 1)
 
                 Image(systemName: "line.3.horizontal")
                     .foregroundStyle(.secondary)
@@ -140,7 +191,16 @@ struct CurrencyRow: View {
                 onTap()
             }
         }
+        .onLongPressGesture {
+            if !isEditMode {
+                onCopy()
+            }
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(rate.currency.title), \(formattedValue)")
+        .accessibilityHint(isEditMode ? "Drag to reorder" : "Tap to edit amount, hold to copy")
         .animation(.easeInOut(duration: 0.2), value: isEditMode)
+        .animation(.easeInOut(duration: 0.2), value: isCopied)
     }
 }
 
