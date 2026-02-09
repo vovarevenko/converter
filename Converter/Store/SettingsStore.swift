@@ -10,7 +10,6 @@ enum NumberFormatOption: String, CaseIterable, Identifiable {
     case commaDot = "1,234.56"
     case dotComma = "1.234,56"
     case spaceComma = "1 234,56"
-    case plain = "1234.56"
 
     var id: String { rawValue }
 
@@ -26,13 +25,13 @@ enum NumberFormatOption: String, CaseIterable, Identifiable {
         case (",", "."): return .dotComma
         case (",", "\u{00A0}"), (",", " "): return .spaceComma
         default:
-            return decimal == "." ? .plain : .commaDot
+            return .commaDot
         }
     }
 
     var decimalSeparator: String {
         switch resolved {
-        case .commaDot, .plain: return "."
+        case .commaDot: return "."
         case .dotComma, .spaceComma: return ","
         case .system: return "."
         }
@@ -43,7 +42,6 @@ enum NumberFormatOption: String, CaseIterable, Identifiable {
         case .commaDot: return ","
         case .dotComma: return "."
         case .spaceComma: return "\u{00A0}"
-        case .plain: return nil
         case .system: return nil
         }
     }
